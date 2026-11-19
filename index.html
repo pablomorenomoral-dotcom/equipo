@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Equipo · Claude + Gemini</title>
+<meta name="theme-color" content="#10171c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Equipo">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  :root {
+    --fondo: #0b1014; --lateral: #10171c; --cabecera: #172027; --hover: #1f2b33; --linea: #1f2a31; --campo: #1c262d;
+    --texto: #e8edef; --suave: #8c9aa3; --tenue: #5f6d75; --pablo: #0f5f4f; --burbuja: #182229;
+    --claude: #e08a66; --gemini: #7cb2ff; --equipo: #e9d8a6; --ok: #2fd27a; --aviso: #f0b429; --error: #ff6b6b;
+    --radio: 12px; --sombra: 0 1px 2px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; } [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; background: var(--fondo); color: var(--texto);
+    font: 14.5px/1.5 "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  .app { display: grid; grid-template-columns: 330px 1fr; height: 100vh; height: 100dvh; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  svg { width: 21px; height: 21px; fill: currentColor; flex: none; }
+  ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-thumb { background: #2a363e; border-radius: 8px; }
+
+  /* ---------- Lateral ---------- */
+  aside { background: var(--lateral); border-right: 1px solid var(--linea); display: flex; flex-direction: column; min-height: 0; }
+  .lat-cab { height: 62px; display: flex; align-items: center; gap: 10px; padding: 0 14px 0 18px; border-bottom: 1px solid var(--linea); }
+  .marca { flex: 1; font-weight: 650; font-size: 16px; letter-spacing: .01em; display: flex; align-items: center; gap: 9px; }
+  .marca .duo { display: flex; } .marca .duo i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .marca .duo i:first-child { background: var(--claude); } .marca .duo i:last-child { background: var(--gemini); margin-left: -4px; }
+  .icono { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; color: var(--suave); text-decoration: none; }
+  .icono:hover { background: var(--hover); color: var(--texto); }
+  .lista { flex: 1; overflow-y: auto; padding: 6px; }
+  .chat-item { display: flex; gap: 12px; padding: 10px; cursor: pointer; border-radius: 10px; }
+  .chat-item:hover { background: var(--hover); }
+  .chat-item.activo { background: #1d2c35; }
+  .avatar { width: 44px; height: 44px; border-radius: 14px; flex: none; display: grid; place-items: center; font-weight: 700;
+    background: linear-gradient(135deg, var(--claude), var(--gemini)); color: #0d1418; font-size: 17px; }
+  .chat-item .info { min-width: 0; flex: 1; }
+  .chat-item .fila1 { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .chat-item .nombre { font-size: 15px; font-weight: 600; }
+  .chat-item .hora { font-size: 11.5px; color: var(--tenue); }
+  .chat-item .prev { color: var(--suave); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .panel-equipo { margin: 8px; padding: 12px; border-radius: var(--radio); background: var(--cabecera); display: grid; gap: 10px; font-size: 13px; }
+  .miembro { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; }
+  .mini { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; font-weight: 700; font-size: 13px; color: #0d1418; position: relative; }
+  .mini.c { background: var(--claude); } .mini.g { background: var(--gemini); }
+  .mini .punto { position: absolute; right: -2px; bottom: -2px; width: 11px; height: 11px; border-radius: 50%; background: #55636b; border: 2px solid var(--cabecera); }
+  .mini .punto.on { background: var(--ok); } .mini .punto.espera { background: var(--aviso); }
+  .miembro b { display: block; font-size: 13.5px; font-weight: 600; }
+  .miembro small { color: var(--suave); font-size: 12px; display: block; line-height: 1.35; }
+  .interruptor { width: 36px; height: 20px; border-radius: 99px; background: #3b4a54; position: relative; transition: .2s; }
+  .interruptor::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #aebac1; transition: .2s; }
+  .interruptor.on { background: var(--gemini); } .interruptor.on::after { left: 19px; background: #fff; }
+  .gasto { border-top: 1px solid var(--linea); padding-top: 9px; display: grid; gap: 4px; color: var(--suave); font-size: 12px; }
+  .gasto .fila { display: flex; justify-content: space-between; } .gasto .fila b { color: var(--texto); font-weight: 600; }
+  .barra { height: 4px; border-radius: 4px; background: #26333b; overflow: hidden; } .barra i { display: block; height: 100%; background: var(--gemini); }
+  .panel-equipo a { color: var(--suave); font-size: 12px; }
+
+  /* ---------- Conversación ---------- */
+  main { display: flex; flex-direction: column; min-width: 0; min-height: 0; position: relative;
+    background: radial-gradient(1200px 600px at 70% -10%, rgba(124,178,255,.05), transparent 60%),
+                radial-gradient(900px 500px at 10% 110%, rgba(224,138,102,.05), transparent 60%), var(--fondo); }
+  .cab { height: 62px; display: flex; align-items: center; gap: 12px; padding: 0 12px 0 16px; background: rgba(23,32,39,.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--linea); flex: none; }
+  .cab .titulo { flex: 1; min-width: 0; }
+  .cab .titulo b { display: block; font-size: 15.5px; font-weight: 600; }
+  .cab .titulo span { font-size: 12.5px; color: var(--suave); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .volver { display: none; }
+  .mensajes { flex: 1; overflow-y: auto; padding: 22px max(4%, 14px) 12px; display: flex; flex-direction: column; gap: 8px; }
+  .vacio { margin: auto; text-align: center; color: var(--suave); max-width: 440px; }
+  .vacio h2 { color: var(--texto); font-weight: 600; }
+  .dia { align-self: center; font-size: 11.5px; color: var(--suave); background: var(--cabecera); padding: 3px 10px; border-radius: 8px; margin: 8px 0; }
+
+  .msg { max-width: 74%; padding: 8px 12px 6px; border-radius: var(--radio); background: var(--burbuja); position: relative; word-wrap: break-word; box-shadow: var(--sombra); }
+  .msg .autor { font-size: 12.5px; font-weight: 650; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+  .msg .meta { font-size: 11px; color: var(--tenue); text-align: right; margin-top: 3px; }
+  .msg.pablo { align-self: flex-end; background: var(--pablo); border-bottom-right-radius: 4px; }
+  .msg.claude, .msg.gemini { border-bottom-left-radius: 4px; }
+  .msg.claude .autor { color: var(--claude); } .msg.gemini .autor { color: var(--gemini); }
+  .msg.equipo { max-width: 88%; background: linear-gradient(180deg, #1d2a2e, #19242a); border: 1px solid #3a3a2a; border-left: 3px solid var(--equipo); padding: 13px 16px 8px; }
+  .msg.equipo .autor { color: var(--equipo); letter-spacing: .05em; text-transform: uppercase; font-size: 11.5px; }
+  .msg.debate { border-left: 3px dashed var(--suave); }
+  .msg.plegado .cuerpo { max-height: 4.6em; overflow: hidden; -webkit-mask-image: linear-gradient(#000 45%, transparent); mask-image: linear-gradient(#000 45%, transparent); }
+  .desplegar { color: var(--gemini); font-size: 12.5px; margin-top: 4px; }
+  .revision { align-self: flex-start; font-size: 12px; color: var(--suave); padding: 0 12px; }
+  .revision.ok::before { content: "✓✓ "; color: var(--gemini); }
+  .msg.nota-gemini { border-left: 3px solid var(--aviso); background: #2a2516; } .msg.nota-gemini .autor { color: var(--aviso); }
+  .msg.error { border-left: 3px solid var(--error); } .msg.error .autor { color: var(--error); }
+  .cuerpo p { margin: 0 0 6px; } .cuerpo p:last-child { margin: 0; }
+  .cuerpo h3 { margin: 12px 0 4px; font-size: 15px; } .cuerpo h3:first-child { margin-top: 0; }
+  .cuerpo ul, .cuerpo ol { margin: 0 0 6px; padding-left: 20px; } .cuerpo li { margin: 2px 0; }
+  .cuerpo code { background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 5px; font-size: 13px; font-family: Consolas, "Cascadia Mono", monospace; }
+  .cuerpo a { color: #6cc4f5; word-break: break-all; }
+  .cuerpo i.modelo { color: var(--tenue); font-size: 11.5px; }
+
+  /* Pasos de Claude (lo que va pensando y haciendo) */
+  .pasos { align-self: flex-start; max-width: 74%; border: 1px solid #3a2c25; background: rgba(224,138,102,.06); border-radius: var(--radio); padding: 8px 12px; font-size: 13px; }
+  .pasos summary { cursor: pointer; color: var(--claude); font-weight: 600; font-size: 12.5px; list-style: none; display: flex; gap: 8px; align-items: center; }
+  .pasos summary::-webkit-details-marker { display: none; }
+  .pasos summary .n { color: var(--suave); font-weight: 400; }
+  .pasos ol { margin: 8px 0 2px; padding: 0; list-style: none; display: grid; gap: 5px; }
+  .pasos li { display: grid; grid-template-columns: 42px 1fr; gap: 8px; color: #cfd6da; }
+  .pasos li time { color: var(--tenue); font-family: Consolas, monospace; font-size: 12px; }
+  .pasos li .cuerpo p { margin: 0; }
+  .pasos.vivo { border-color: var(--claude); }
+  .pasos.vivo summary::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--claude); animation: lat 1.2s infinite; }
+
+  .adjuntos { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; margin-bottom: 6px; min-width: 220px; }
+  .adjuntos.uno { grid-template-columns: 1fr; }
+  .adjuntos .img { border-radius: 9px; overflow: hidden; background: #0e1519; cursor: zoom-in; aspect-ratio: 4/3; }
+  .adjuntos.uno .img { aspect-ratio: auto; max-height: 340px; }
+  .adjuntos img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .adjuntos.uno img { object-fit: contain; max-height: 340px; }
+  .archivo { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 9px; background: rgba(0,0,0,.25); color: var(--texto); text-decoration: none; font-size: 13px; min-width: 0; }
+  .archivo .tipo { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; font-size: 10.5px; font-weight: 700; background: #2a3a44; flex: none; }
+  .archivo span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .escribiendo { align-self: flex-start; font-size: 12.5px; color: var(--suave); padding: 4px 12px; display: flex; gap: 8px; align-items: center; }
+  .escribiendo i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; display: inline-block; animation: lat 1.2s infinite; margin-right: 2px; }
+  .escribiendo i:nth-child(2) { animation-delay: .2s; } .escribiendo i:nth-child(3) { animation-delay: .4s; }
+  .escribiendo.claude { color: var(--claude); } .escribiendo.gemini { color: var(--gemini); } .escribiendo.reposo { color: var(--tenue); }
+  @keyframes lat { 50% { opacity: .2; } }
+
+  /* ---------- Redactor ---------- */
+  .redactor { flex: none; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); display: grid; gap: 8px; border-top: 1px solid var(--linea); background: rgba(23,32,39,.92); }
+  .previas { display: flex; gap: 8px; flex-wrap: wrap; }
+  .previa { position: relative; width: 64px; height: 64px; border-radius: 10px; overflow: hidden; background: var(--hover); display: grid; place-items: center; font-size: 10.5px; text-align: center; padding: 4px; color: var(--suave); }
+  .previa img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .previa button { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,.7); color: #fff; font-size: 11px; z-index: 1; }
+  .fila-redactor { display: flex; align-items: flex-end; gap: 8px; }
+  textarea { flex: 1; resize: none; max-height: 180px; min-height: 44px; padding: 11px 14px; border-radius: 12px; border: 1px solid transparent;
+    background: var(--campo); color: var(--texto); font: inherit; outline: none; }
+  textarea:focus { border-color: #2f4250; }
+  .enviar { width: 44px; height: 44px; border-radius: 12px; background: var(--pablo); display: grid; place-items: center; color: #fff; }
+  .enviar:disabled { opacity: .5; }
+  .micro { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: var(--suave); background: var(--campo); }
+  .micro:hover { color: var(--texto); }
+  .micro.grabando { background: #8b1e1e; color: #fff; animation: pulso 1.2s infinite; }
+  @keyframes pulso { 50% { box-shadow: 0 0 0 6px rgba(255,80,80,.18); } }
+  .aviso-micro { font-size: 12px; color: var(--aviso); }
+  .bajar { position: absolute; right: 18px; bottom: 92px; z-index: 4; display: none; align-items: center; gap: 6px;
+    background: var(--cabecera); border: 1px solid #2f4250; color: var(--texto); padding: 8px 12px; border-radius: 99px; box-shadow: 0 4px 14px rgba(0,0,0,.4); font-size: 13px; }
+  .bajar.on { display: flex; }
+  .bajar b { background: var(--ok); color: #062b1c; border-radius: 99px; padding: 0 7px; font-size: 12px; }
+  .soltar { position: absolute; inset: 0; background: rgba(15,95,79,.25); border: 2px dashed var(--ok); display: none; place-items: center; font-size: 18px; z-index: 5; pointer-events: none; }
+  main.arrastrando .soltar { display: grid; }
+
+  /* ---------- Visor de imágenes y galería ---------- */
+  .visor { position: fixed; inset: 0; background: rgba(0,0,0,.92); display: none; z-index: 20; grid-template-rows: 56px 1fr 70px; }
+  .visor.on { display: grid; }
+  .visor .barra-visor { display: flex; align-items: center; gap: 8px; padding: 0 12px; color: #ddd; }
+  .visor .barra-visor span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .visor .centro { display: grid; place-items: center; min-height: 0; position: relative; }
+  .visor .centro img { max-width: 94vw; max-height: 100%; object-fit: contain; }
+  .visor .flecha { position: absolute; top: 50%; transform: translateY(-50%); width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.1); color: #fff; font-size: 22px; }
+  .visor .flecha.izq { left: 14px; } .visor .flecha.der { right: 14px; }
+  .visor .tira { display: flex; gap: 6px; justify-content: center; padding: 8px; overflow-x: auto; }
+  .visor .tira img { height: 52px; width: 52px; object-fit: cover; border-radius: 6px; opacity: .5; cursor: pointer; }
+  .visor .tira img.on { opacity: 1; outline: 2px solid #fff; }
+  .galeria { position: absolute; top: 62px; right: 0; bottom: 0; width: min(380px, 100%); background: var(--lateral); border-left: 1px solid var(--linea); z-index: 6; display: none; flex-direction: column; }
+  .galeria.on { display: flex; }
+  .galeria .gcab { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--linea); font-weight: 600; }
+  .galeria .gcab span { flex: 1; }
+  .galeria .gcuerpo { overflow-y: auto; padding: 10px; display: grid; gap: 12px; }
+  .galeria .rejilla { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .galeria .rejilla div { aspect-ratio: 1; border-radius: 6px; overflow: hidden; cursor: zoom-in; background: #0e1519; }
+  .galeria .rejilla img { width: 100%; height: 100%; object-fit: cover; }
+  .galeria h4 { margin: 4px 0; font-size: 12px; color: var(--suave); text-transform: uppercase; letter-spacing: .06em; }
+
+  .ajustes { position: fixed; inset: 0; background: rgba(5,8,10,.92); display: none; place-items: center; z-index: 30; padding: 20px; }
+  .ajustes.on { display: grid; }
+  .ajustes form { width: min(440px, 100%); background: var(--cabecera); border: 1px solid var(--linea); border-radius: 16px; padding: 22px; display: grid; gap: 12px; }
+  .ajustes h2 { margin: 0; font-size: 18px; } .ajustes p { margin: 0; color: var(--suave); font-size: 13px; }
+  .ajustes label { font-size: 12.5px; color: var(--suave); display: grid; gap: 4px; }
+  .ajustes input { padding: 11px 12px; border-radius: 10px; border: 1px solid #2f4250; background: var(--campo); color: var(--texto); font: inherit; }
+  .ajustes .err { color: var(--error); font-size: 13px; min-height: 1em; }
+  .ajustes button { padding: 11px; border-radius: 10px; background: var(--pablo); color: #fff; font-weight: 600; }
+  @media (max-width: 820px) {
+    .app { grid-template-columns: 1fr; }
+    .app.en-chat aside { display: none; }
+    .app:not(.en-chat) main { display: none; }
+    .volver { display: grid; }
+    .mensajes { padding: 14px 10px; }
+    .msg, .msg.equipo, .pasos { max-width: 94%; }
+    .icono { width: 42px; height: 42px; }
+    .galeria { top: 62px; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside>
+    <div class="lat-cab">
+      <div class="marca"><span class="duo"><i></i><i></i></span>Equipo</div>
+      <button class="icono" title="Ajustes de conexión" onclick="abrirAjustes()"><svg viewBox="0 0 24 24"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.3 7.3 0 0 0-1.7-1L15 3h-4l-.4 2.9a7.3 7.3 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1L11 21h4l.4-2.9c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5L19.4 13zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg></button>
+      <button class="icono" title="Nuevo chat" onclick="nuevoChat()"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
+    </div>
+    <div class="lista" id="lista"></div>
+    <div class="panel-equipo">
+      <div class="miembro"><div class="mini c">C<span class="punto" id="pClaude"></span></div>
+        <div><b>Claude</b><small id="tClaude">desconectado</small></div><span></span></div>
+      <div class="miembro"><div class="mini g">G<span class="punto" id="pGemini"></span></div>
+        <div><b>Gemini</b><small id="tGemini">—</small></div>
+        <button class="interruptor" id="intGemini" title="Encender o apagar a Gemini"></button></div>
+      <div class="gasto" id="gasto"></div>
+      <a id="ficha" target="_blank" rel="noopener">Ficha del jefe ↗</a>
+    </div>
+  </aside>
+
+  <main id="main">
+    <div class="cab">
+      <button class="icono volver" onclick="cerrarChat()" title="Volver"><svg viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg></button>
+      <div class="avatar" id="cabAvatar" style="width:40px;height:40px;font-size:15px;border-radius:12px">E</div>
+      <div class="titulo"><b id="cabNombre">Equipo</b><span id="cabEstado">Pablo, Claude y Gemini</span></div>
+      <button class="icono" id="bGaleria" title="Archivos e imágenes del chat" onclick="abrirGaleria()"><svg viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z"/></svg></button>
+      <a class="icono" id="cabCarpeta" target="_blank" rel="noopener" title="Carpeta del chat en Drive"><svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg></a>
+    </div>
+    <div class="mensajes" id="mensajes">
+      <div class="vacio"><h2>Equipo de trabajo</h2><p>Elige un chat a la izquierda o crea uno nuevo.</p></div>
+    </div>
+    <div class="redactor" id="redactor" hidden>
+      <div class="previas" id="previas"></div>
+      <div class="aviso-micro" id="avisoMicro" hidden></div>
+      <div class="fila-redactor">
+        <button class="icono" title="Adjuntar archivos" onclick="$('archivo').click()"><svg viewBox="0 0 24 24"><path d="M16.5 6v11.5a4 4 0 0 1-8 0V5a2.5 2.5 0 0 1 5 0v10.5a1 1 0 0 1-2 0V6H10v9.5a2.5 2.5 0 0 0 5 0V5a4 4 0 0 0-8 0v12.5a5.5 5.5 0 0 0 11 0V6h-1.5z"/></svg></button>
+        <input type="file" id="archivo" multiple hidden>
+        <textarea id="texto" rows="1" placeholder="Escribe al equipo" title="También puedes pegar o arrastrar imágenes"></textarea>
+        <button class="micro" id="bMicro" title="Dictar"><svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg></button>
+        <button class="enviar" id="bEnviar" title="Enviar"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
+      </div>
+    </div>
+    <div class="soltar">Suelta aquí para adjuntar</div>
+    <button class="bajar" id="bBajar" title="Ir al último mensaje">↓ Ir abajo <b id="nNuevos" hidden></b></button>
+    <div class="galeria" id="galeria">
+      <div class="gcab"><span>Archivos del chat</span><button class="icono" onclick="$('galeria').classList.remove('on')" title="Cerrar">✕</button></div>
+      <div class="gcuerpo" id="gcuerpo"></div>
+    </div>
+  </main>
+</div>
+
+<div class="visor" id="visor">
+  <div class="barra-visor"><span id="vNombre"></span>
+    <a class="icono" id="vAbrir" target="_blank" rel="noopener" title="Abrir en Drive">↗</a>
+    <button class="icono" onclick="cerrarVisor()" title="Cerrar">✕</button></div>
+  <div class="centro"><button class="flecha izq" onclick="moverVisor(-1)">‹</button><img id="vImg" alt=""><button class="flecha der" onclick="moverVisor(1)">›</button></div>
+  <div class="tira" id="vTira"></div>
+</div>
+
+<div class="ajustes" id="ajustes">
+  <form id="fAjustes" autocomplete="off">
+    <h2>Conectar con el equipo</h2>
+    <p>Se guarda solo en este dispositivo. La clave es la que pusiste en el Doc de la Mesa, menú 🤝 Equipo › Configurar clave de la app instalable.</p>
+    <label>Dirección de la API<input id="aUrl" type="url" required></label>
+    <label>Clave<input id="aClave" type="password" required minlength="16" autocomplete="current-password"></label>
+    <div class="err" id="aErr"></div>
+    <button type="submit">Conectar</button>
+  </form>
+</div>
+<script>
+  // ===== Puente: la interfaz llama a google.script.run como en Apps Script, y aquí se traduce a la API =====
+  const API_POR_DEFECTO = 'https://script.google.com/macros/s/AKfycbwQQITabR_SDWdUowzzNFiGLhnucTPSXzNext2SsFx_UcEiGf-aBLUmFI5bXoW5laWD/exec';
+  const conf = { url: '', clave: '' };
+  try { conf.url = localStorage.getItem('equipo.api') || API_POR_DEFECTO; conf.clave = localStorage.getItem('equipo.clave') || ''; } catch (e) { conf.url = API_POR_DEFECTO; }
+  function abrirAjustes(msg) {
+    document.getElementById('aUrl').value = conf.url; document.getElementById('aClave').value = conf.clave;
+    document.getElementById('aErr').textContent = msg || ''; document.getElementById('ajustes').classList.add('on');
+  }
+  document.getElementById('fAjustes').addEventListener('submit', e => {
+    e.preventDefault();
+    conf.url = document.getElementById('aUrl').value.trim(); conf.clave = document.getElementById('aClave').value;
+    try { localStorage.setItem('equipo.api', conf.url); localStorage.setItem('equipo.clave', conf.clave); } catch (x) {}
+    location.reload();
+  });
+  async function llamarApi(accion, args) {
+    if (!conf.clave || !conf.url || conf.url.indexOf('__') === 0) { abrirAjustes(); throw new Error('Falta configurar la conexión.'); }
+    const r = await fetch(conf.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ clave: conf.clave, accion, args }) });
+    if (!r.ok) throw new Error('El servidor ha respondido ' + r.status);
+    const d = await r.json();
+    if (!d.ok) { if (/Clave incorrecta|Demasiados intentos/.test(d.error)) abrirAjustes(d.error); throw new Error(d.error); }
+    return d.datos;
+  }
+  class Llamada {
+    constructor() { this.ok = () => {}; this.mal = e => console.error(e); }
+    withSuccessHandler(f) { this.ok = f; return this; }
+    withFailureHandler(f) { this.mal = f; return this; }
+  }
+  ['obtenerTodo', 'crearChat', 'enviarMensaje', 'subirArchivo', 'cambiarGemini', 'empujarGemini'].forEach(n => {
+    Llamada.prototype[n] = function (...args) { const ok = this.ok, mal = this.mal; llamarApi(n, args).then(ok, mal); };
+  });
+  window.google = { script: { run: {
+    withSuccessHandler(f) { return new Llamada().withSuccessHandler(f); },
+    withFailureHandler(f) { return new Llamada().withFailureHandler(f); }
+  } } };
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+<script>
+  const $ = id => document.getElementById(id);
+  const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  let chatActual = null, estado = null, firma = '', ocupado = false, pendientes = [], abiertos = {}, pasosAbiertos = {};
+  let imagenesChat = [], visorI = 0;
+  try { chatActual = localStorage.getItem('chatActual'); } catch (e) {}
+
+  // ---------- Markdown ligero ----------
+  function md(t) {
+    const inline = s => esc(s)
+      .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+      .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<i>$2</i>')
+      .replace(/(^|\s)_\((modelo:[^)]*)\)_/g, '$1<i class="modelo">($2)</i>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/(https?:\/\/[^\s<)]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+    let html = '', lista = null;
+    const cerrar = () => { if (lista) { html += '</' + lista + '>'; lista = null; } };
+    String(t || '').split('\n').forEach(l => {
+      let m;
+      if ((m = l.match(/^#{1,6}\s+(.*)/))) { cerrar(); html += '<h3>' + inline(m[1]) + '</h3>'; }
+      else if ((m = l.match(/^\s*[-*•]\s+(.*)/))) { if (lista !== 'ul') { cerrar(); html += '<ul>'; lista = 'ul'; } html += '<li>' + inline(m[1]) + '</li>'; }
+      else if ((m = l.match(/^\s*\d+[.)]\s+(.*)/))) { if (lista !== 'ol') { cerrar(); html += '<ol>'; lista = 'ol'; } html += '<li>' + inline(m[1]) + '</li>'; }
+      else if (!l.trim()) { cerrar(); }
+      else { cerrar(); html += '<p>' + inline(l) + '</p>'; }
+    });
+    cerrar();
+    return html;
+  }
+  const hora = f => { const m = String(f || '').match(/(\d{1,2}):(\d{2})(?::\d{2})?$/); return m ? m[1].padStart(2, '0') + ':' + m[2] : ''; };
+  const horaEpoch = s => { const d = new Date(s * 1000); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+  const dinero = n => (Number(n) || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: n < 1 ? 3 : 2 }) + ' $';
+  const nombreModelo = m => String(m || '').replace(/^gemini-/, '').replace(/-preview.*$/, '').replace(/-/g, ' ').replace(/\bpro\b/, 'Pro').replace(/\bflash\b/, 'Flash').replace(/\blite\b/, 'Lite') || '—';
+
+  // ---------- Datos ----------
+  function pedir() {
+    if (ocupado || document.hidden) return;
+    ocupado = true;
+    google.script.run.withSuccessHandler(pintar).withFailureHandler(fallo).obtenerTodo(chatActual);
+  }
+  function fallo(e) { ocupado = false; console.error(e); $('cabEstado').textContent = 'Error: ' + (e.message || e); }
+
+  function estadoClaude(s) {
+    if (s.claudeEnLinea) return { clase: 'on', corto: 'en línea', largo: s.claudeActividad ? 'Claude: ' + s.claudeActividad : 'Claude está en línea' };
+    if (s.claudeProxima) return { clase: 'espera', corto: 'revisa a las ' + horaEpoch(s.claudeProxima), largo: 'Claude revisará el chat a las ' + horaEpoch(s.claudeProxima) };
+    return { clase: '', corto: 'en reposo', largo: 'Claude está en reposo: escríbele «conéctate» en el chat de Claude' };
+  }
+
+  function pintar(s) {
+    ocupado = false;
+    const f = JSON.stringify(s);
+    if (f === firma) return;
+    firma = f; estado = s;
+    $('ficha').href = s.fichaUrl;
+    const ec = estadoClaude(s);
+    $('pClaude').className = 'punto ' + ec.clase;
+    $('tClaude').textContent = ec.corto + (s.claudeEnLinea && s.claudeActividad ? ' · ' + s.claudeActividad : '');
+    $('pGemini').className = 'punto' + (s.geminiActivo ? ' on' : '');
+    $('intGemini').classList.toggle('on', s.geminiActivo);
+    const u = s.uso || {};
+    $('tGemini').textContent = (s.geminiActivo ? 'encendido' : 'apagado') + (u.ultimoModelo ? ' · ' + nombreModelo(u.ultimoModelo) : '');
+    const pct = Math.min(100, (u.busquedasMes || 0) / (u.busquedasGratis || 5000) * 100);
+    $('gasto').innerHTML =
+      '<div class="fila"><span>Gasto Gemini hoy</span><b>' + dinero(u.hoy) + '</b></div>' +
+      '<div class="fila"><span>Este mes</span><b>' + dinero(u.mes) + '</b></div>' +
+      '<div class="fila"><span>Búsquedas en Google</span><b>' + (u.busquedasMes || 0) + ' / ' + (u.busquedasGratis || 5000) + ' gratis</b></div>' +
+      '<div class="barra"><i style="width:' + pct + '%"></i></div>' +
+      '<div style="color:var(--tenue)">Estimado con los precios oficiales' + (u.sinPrecio ? ' · ' + u.sinPrecio + ' respuesta(s) sin precio conocido' : '') + '. La factura real está en AI Studio.</div>';
+    pintarLista(s);
+    pintarChat(s);
+  }
+
+  function pintarLista(s) {
+    $('lista').innerHTML = s.chats.map(c => {
+      const u = c.ultimo;
+      const prev = u ? (u.autor === 'Pablo' ? 'Tú: ' : u.autor + ': ') + u.texto.replace(/[#*`_]/g, '') : 'Sin mensajes';
+      return '<div class="chat-item' + (c.chat === chatActual ? ' activo' : '') + '" data-chat="' + esc(c.chat) + '">' +
+        '<div class="avatar">' + esc(c.chat[0].toUpperCase()) + '</div><div class="info"><div class="fila1"><span class="nombre">' + esc(c.chat) +
+        '</span><span class="hora">' + (u ? hora(u.fecha) : '') + '</span></div><div class="prev">' + esc(prev) + '</div></div></div>';
+    }).join('') || '<p style="padding:16px;color:var(--suave)">Crea tu primer chat con el botón +</p>';
+    [...$('lista').querySelectorAll('.chat-item')].forEach(el => el.onclick = () => abrirChat(el.dataset.chat));
+  }
+
+  const esImagen = a => /^image\//.test(a.mime || '');
+  const miniatura = (id, sz) => 'https://drive.google.com/thumbnail?id=' + id + '&sz=w' + (sz || 600);
+  const enDrive = id => 'https://drive.google.com/file/d/' + id + '/view';
+  function etiquetaTipo(a) {
+    const ext = (String(a.nombre).match(/\.([a-z0-9]{1,5})$/i) || [, ''])[1].toUpperCase();
+    return ext || (a.mime || '').split('/')[1] || 'ARCH';
+  }
+  function adjuntosHtml(adj) {
+    if (!adj || !adj.length) return '';
+    const imgs = adj.filter(esImagen), otros = adj.filter(a => !esImagen(a));
+    let h = '';
+    if (imgs.length) h += '<div class="adjuntos' + (imgs.length === 1 ? ' uno' : '') + '">' + imgs.map(a =>
+      '<div class="img" data-ver="' + a.id + '"><img loading="lazy" src="' + miniatura(a.id) + '" alt="' + esc(a.nombre) + '"></div>').join('') + '</div>';
+    if (otros.length) h += '<div style="display:grid;gap:6px;margin-bottom:6px">' + otros.map(a =>
+      '<a class="archivo" href="' + enDrive(a.id) + '" target="_blank" rel="noopener"><span class="tipo">' + esc(etiquetaTipo(a).slice(0, 4)) + '</span><span>' + esc(a.nombre) + '</span></a>').join('') + '</div>';
+    return h;
+  }
+
+  function pintarChat(s) {
+    const c = s.chats.find(x => x.chat === chatActual);
+    $('app').classList.toggle('en-chat', !!c);
+    $('redactor').hidden = !c;
+    if (!c) return;
+    $('cabNombre').textContent = c.chat;
+    $('cabAvatar').textContent = c.chat[0].toUpperCase();
+    $('cabCarpeta').href = 'https://drive.google.com/drive/folders/' + c.carpetaId;
+    const ec = estadoClaude(s);
+    $('cabEstado').textContent = 'Gemini ' + (s.geminiActivo ? 'encendido' : 'apagado') + ' · Claude ' + ec.corto;
+
+    const ms = s.mensajes;
+    imagenesChat = [];
+    ms.forEach(m => (m.adjuntos || []).filter(esImagen).forEach(a => imagenesChat.push(a)));
+    const equipoPara = new Set(ms.filter(m => m.tipo === 'equipo').map(m => m.para));
+    let html = '', diaPrevio = '', grupo = null;
+
+    const cerrarGrupo = (vivo) => {
+      if (!grupo) return;
+      const clave = grupo[0].id;
+      const abierto = vivo || pasosAbiertos[clave];
+      html += '<details class="pasos' + (vivo ? ' vivo' : '') + '"' + (abierto ? ' open' : '') + ' data-clave="' + clave + '"><summary>' +
+        (vivo ? 'Claude está trabajando' : 'Pasos de Claude') + ' <span class="n">· ' + grupo.length + ' paso' + (grupo.length > 1 ? 's' : '') + '</span></summary><ol>' +
+        grupo.map(p => '<li><time>' + hora(p.fecha) + '</time><div class="cuerpo">' + md(p.texto) + '</div></li>').join('') + '</ol></details>';
+      grupo = null;
+    };
+
+    ms.forEach((m, i) => {
+      const dia = String(m.fecha).slice(0, 10);
+      if (dia && dia !== diaPrevio) { cerrarGrupo(false); html += '<div class="dia">' + fechaBonita(dia) + '</div>'; diaPrevio = dia; }
+      if (m.autor === 'Claude' && m.tipo === 'paso') { (grupo = grupo || []).push(m); return; }
+      cerrarGrupo(false);
+      const quien = m.autor.toLowerCase();
+      if (m.autor === 'Gemini' && m.tipo === 'revision') {
+        if (/^\s*OK\.?\s*(_\(modelo:[^)]*\)_)?\s*$/i.test(m.texto)) html += '<div class="revision ok">Gemini ha revisado la respuesta del equipo y está de acuerdo</div>';
+        else html += '<div class="msg gemini nota-gemini"><div class="autor">Nota de Gemini sobre la respuesta del equipo · sin editar</div><div class="cuerpo">' + md(m.texto) + '</div><div class="meta">' + hora(m.fecha) + '</div></div>';
+        return;
+      }
+      let clase = 'msg ' + quien, titulo = m.autor;
+      if (m.tipo === 'equipo') { clase = 'msg equipo'; titulo = 'Respuesta del equipo'; }
+      if (m.tipo === 'debate') { clase += ' debate'; titulo += ' · debate'; }
+      if (m.autor === 'Gemini' && /^⚠/.test(m.texto)) { clase += ' error'; titulo = 'Gemini · no ha podido responder'; }
+      const plegable = m.autor === 'Gemini' && m.tipo === 'respuesta' && equipoPara.has(m.para) && !abiertos[m.id];
+      if (m.autor === 'Gemini' && m.tipo === 'respuesta' && !/^⚠/.test(m.texto)) titulo = 'Gemini · su respuesta independiente';
+      if (plegable) clase += ' plegado';
+      html += '<div class="' + clase + '">' + (m.autor === 'Pablo' ? '' : '<div class="autor">' + titulo + '</div>') +
+        adjuntosHtml(m.adjuntos) + '<div class="cuerpo">' + md(m.texto) + '</div>' +
+        (plegable ? '<button class="desplegar" data-abrir="' + m.id + '">Ver respuesta completa de Gemini</button>' : '') +
+        '<div class="meta">' + hora(m.fecha) + '</div></div>';
+    });
+    cerrarGrupo(s.claudeEnLinea);
+
+    // Quién está trabajando
+    const ultPablo = [...ms].reverse().find(m => m.autor === 'Pablo');
+    if (ultPablo) {
+      const gemini = ms.some(m => m.autor === 'Gemini' && m.tipo === 'respuesta' && m.para === ultPablo.id);
+      const claude = ms.some(m => m.autor === 'Claude' && ['equipo', 'nota'].includes(m.tipo) && m.fecha >= ultPablo.fecha);
+      if (!gemini) html += s.geminiActivo ? '<div class="escribiendo gemini"><span><i></i><i></i><i></i></span>Gemini está escribiendo</div>'
+                                         : '<div class="escribiendo reposo">Gemini está apagado: enciéndelo en el panel de la izquierda</div>';
+      if (!claude) html += s.claudeEnLinea ? '<div class="escribiendo claude"><span><i></i><i></i><i></i></span>' + esc(ec.largo) + '</div>'
+                                         : '<div class="escribiendo ' + (s.claudeProxima ? 'claude' : 'reposo') + '">' + esc(ec.largo) + '</div>';
+    }
+    if (!ms.length) html = '<div class="vacio"><h2>' + esc(c.chat) + '</h2><p>Escribe el primer encargo al equipo.</p></div>';
+
+    const cont = $('mensajes');
+    const arriba = cont.scrollTop;               // posición antes de repintar
+    const nAntes = ultimoTotal;
+    cont.innerHTML = html;
+    if (pegadoAbajo) irAbajo(); else cont.scrollTop = arriba;   // si no estás abajo, la vista no se mueve
+    if (chatPintado === chatActual && ms.length > nAntes && !pegadoAbajo) nuevosSinVer += ms.length - nAntes;
+    ultimoTotal = ms.length; chatPintado = chatActual;
+    actualizarBajar();
+    // las imágenes cambian la altura al cargar: si estabas abajo, seguir abajo
+    cont.querySelectorAll('img').forEach(im => { if (!im.complete) im.addEventListener('load', () => { if (pegadoAbajo) irAbajo(); }, { once: true }); });
+    cont.querySelectorAll('[data-ver]').forEach(el => el.onclick = () => abrirVisor(el.dataset.ver));
+    cont.querySelectorAll('[data-abrir]').forEach(el => el.onclick = () => { abiertos[el.dataset.abrir] = 1; firma = ''; pintar(estado); });
+    cont.querySelectorAll('details.pasos').forEach(el => el.ontoggle = () => { pasosAbiertos[el.dataset.clave] = el.open; });
+    if ($('galeria').classList.contains('on')) pintarGaleria();
+  }
+
+  // ---------- Scroll: solo acompaña a los mensajes nuevos si estás abajo del todo ----------
+  let pegadoAbajo = true, ultimoTotal = 0, chatPintado = null, nuevosSinVer = 0;
+  function irAbajo() { const c = $('mensajes'); c.scrollTop = c.scrollHeight; pegadoAbajo = true; nuevosSinVer = 0; actualizarBajar(); }
+  function actualizarBajar() {
+    $('bBajar').classList.toggle('on', !pegadoAbajo && !!chatActual);
+    $('nNuevos').hidden = !nuevosSinVer; $('nNuevos').textContent = nuevosSinVer;
+  }
+  $('mensajes').addEventListener('scroll', () => {
+    const c = $('mensajes');
+    pegadoAbajo = c.scrollTop + c.clientHeight >= c.scrollHeight - 40;
+    if (pegadoAbajo) nuevosSinVer = 0;
+    actualizarBajar();
+  }, { passive: true });
+  $('bBajar').onclick = irAbajo;
+
+  // ---------- Dictado por voz (reconocimiento del navegador) ----------
+  const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let reco = null, dictando = false, baseTexto = '';
+  function avisoMicro(t) { $('avisoMicro').hidden = !t; $('avisoMicro').textContent = t || ''; }
+  function pararDictado() { dictando = false; $('bMicro').classList.remove('grabando'); try { reco && reco.stop(); } catch (e) {} }
+  // El marco de Google en el que va la app no permite el micrófono a la página.
+  // Alternativa: el dictado del propio sistema, que escribe en cualquier cuadro de texto.
+  const esMovil = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const PISTA_DICTADO = esMovil
+    ? 'Para dictar, pulsa el micrófono de tu teclado (Gboard o el teclado del iPhone).'
+    : 'Para dictar en Windows: con el cursor en el cuadro de texto, pulsa la tecla Windows + H. Habla y vuelve a pulsar Windows + H para parar.';
+  let microBloqueado = false;
+  try { microBloqueado = localStorage.getItem('microBloqueado') === '1'; } catch (e) {}
+  $('bMicro').onclick = () => {
+    if (!Reconocimiento || microBloqueado) { $('texto').focus(); avisoMicro(PISTA_DICTADO); return; }
+    if (dictando) { pararDictado(); return; }
+    reco = new Reconocimiento();
+    reco.lang = 'es-ES'; reco.continuous = true; reco.interimResults = true;
+    const t = $('texto'); baseTexto = t.value ? t.value.replace(/\s*$/, ' ') : '';
+    let finales = '';
+    reco.onresult = e => {
+      let provisional = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) finales += r[0].transcript.trim() + ' '; else provisional += r[0].transcript;
+      }
+      t.value = baseTexto + finales + provisional; ajustar();
+    };
+    reco.onerror = e => {
+      const m = { 'not-allowed': 'El navegador no deja usar el micrófono aquí (permiso denegado o bloqueado por la página).', 'service-not-allowed': 'El navegador no deja usar el micrófono aquí.', 'no-speech': 'No te he oído. Vuelve a pulsar el micrófono.', 'audio-capture': 'No encuentro ningún micrófono.', 'network': 'Sin conexión con el servicio de dictado.' };
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        microBloqueado = true; try { localStorage.setItem('microBloqueado', '1'); } catch (x) {}
+        avisoMicro(PISTA_DICTADO); $('texto').focus();
+      } else avisoMicro(m[e.error] || ('Error de dictado: ' + e.error));
+      pararDictado();
+    };
+    reco.onend = () => { if (dictando) { try { reco.start(); } catch (e) { pararDictado(); } } }; // Chrome corta tras silencios: seguimos hasta que pulses
+    try { reco.start(); dictando = true; avisoMicro(''); $('bMicro').classList.add('grabando'); t.focus(); }
+    catch (e) { avisoMicro('No he podido activar el micrófono: ' + e.message); }
+  };
+
+  function fechaBonita(d) {
+    const hoy = new Date(), f = new Date(d + 'T12:00:00');
+    const mismo = (a, b) => a.toDateString() === b.toDateString();
+    if (mismo(f, hoy)) return 'Hoy';
+    const ayer = new Date(hoy); ayer.setDate(hoy.getDate() - 1);
+    if (mismo(f, ayer)) return 'Ayer';
+    return f.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  // ---------- Visor y galería ----------
+  function abrirVisor(id) {
+    visorI = Math.max(0, imagenesChat.findIndex(a => a.id === id));
+    $('vTira').innerHTML = imagenesChat.map((a, i) => '<img src="' + miniatura(a.id, 160) + '" data-i="' + i + '">').join('');
+    $('vTira').querySelectorAll('img').forEach(el => el.onclick = () => { visorI = +el.dataset.i; mostrarVisor(); });
+    $('visor').classList.add('on'); mostrarVisor();
+  }
+  function mostrarVisor() {
+    const a = imagenesChat[visorI]; if (!a) return;
+    $('vImg').src = miniatura(a.id, 2000); $('vNombre').textContent = a.nombre; $('vAbrir').href = enDrive(a.id);
+    $('vTira').querySelectorAll('img').forEach((el, i) => el.classList.toggle('on', i === visorI));
+  }
+  function moverVisor(d) { if (!imagenesChat.length) return; visorI = (visorI + d + imagenesChat.length) % imagenesChat.length; mostrarVisor(); }
+  function cerrarVisor() { $('visor').classList.remove('on'); $('vImg').src = ''; }
+  document.addEventListener('keydown', e => {
+    if (!$('visor').classList.contains('on')) return;
+    if (e.key === 'Escape') cerrarVisor(); if (e.key === 'ArrowLeft') moverVisor(-1); if (e.key === 'ArrowRight') moverVisor(1);
+  });
+  function abrirGaleria() { $('galeria').classList.toggle('on'); pintarGaleria(); }
+  function pintarGaleria() {
+    if (!estado) return;
+    const todos = []; estado.mensajes.forEach(m => (m.adjuntos || []).forEach(a => todos.push(a)));
+    const imgs = todos.filter(esImagen), otros = todos.filter(a => !esImagen(a));
+    $('gcuerpo').innerHTML = (imgs.length ? '<h4>Imágenes · ' + imgs.length + '</h4><div class="rejilla">' + imgs.map(a => '<div data-ver="' + a.id + '"><img loading="lazy" src="' + miniatura(a.id, 300) + '"></div>').join('') + '</div>' : '') +
+      (otros.length ? '<h4>Archivos · ' + otros.length + '</h4><div style="display:grid;gap:6px">' + otros.map(a => '<a class="archivo" href="' + enDrive(a.id) + '" target="_blank" rel="noopener"><span class="tipo">' + esc(etiquetaTipo(a).slice(0, 4)) + '</span><span>' + esc(a.nombre) + '</span></a>').join('') + '</div>' : '') ||
+      '<p style="color:var(--suave)">Todavía no hay archivos en este chat.</p>';
+    $('gcuerpo').querySelectorAll('[data-ver]').forEach(el => el.onclick = () => abrirVisor(el.dataset.ver));
+  }
+
+  // ---------- Acciones ----------
+  function abrirChat(nombre) {
+    chatActual = nombre; firma = '';
+    try { localStorage.setItem('chatActual', nombre); } catch (e) {}
+    $('mensajes').innerHTML = '<div class="vacio"><p>Cargando…</p></div>';
+    pegadoAbajo = true; nuevosSinVer = 0; ultimoTotal = 0; chatPintado = null;
+    ocupado = false; pedir();
+    setTimeout(irAbajo, 500);
+  }
+  function cerrarChat() { chatActual = null; firma = ''; $('app').classList.remove('en-chat'); $('galeria').classList.remove('on'); }
+
+  function nuevoChat() {
+    const n = prompt('Nombre del nuevo chat (por ejemplo: Web, Instagram, Iluminación)');
+    if (!n) return;
+    ocupado = true;
+    google.script.run.withSuccessHandler(s => { chatActual = n.trim(); firma = ''; pintar(s); })
+      .withFailureHandler(e => { ocupado = false; alert(e.message || e); }).crearChat(n);
+  }
+
+  function anadirArchivos(lista) {
+    [...lista].forEach(f => {
+      if (f.size > 40 * 1024 * 1024) { alert(f.name + ' pesa más de 40 MB.'); return; }
+      const r = new FileReader();
+      r.onload = () => { pendientes.push({ nombre: f.name || ('imagen-' + Date.now() + '.png'), mime: f.type, b64: r.result.split(',')[1], url: /^image\//.test(f.type) ? r.result : '' }); pintarPrevias(); };
+      r.readAsDataURL(f);
+    });
+  }
+  $('archivo').addEventListener('change', e => { anadirArchivos(e.target.files); e.target.value = ''; });
+  $('texto').addEventListener('paste', e => { const f = [...(e.clipboardData || {}).files || []]; if (f.length) { e.preventDefault(); anadirArchivos(f); } });
+  const main = $('main');
+  ['dragenter', 'dragover'].forEach(t => main.addEventListener(t, e => { if (chatActual && [...e.dataTransfer.types].includes('Files')) { e.preventDefault(); main.classList.add('arrastrando'); } }));
+  ['dragleave', 'drop'].forEach(t => main.addEventListener(t, e => { if (t === 'dragleave' && main.contains(e.relatedTarget)) return; main.classList.remove('arrastrando'); }));
+  main.addEventListener('drop', e => { if (chatActual && e.dataTransfer.files.length) { e.preventDefault(); anadirArchivos(e.dataTransfer.files); } });
+
+  function pintarPrevias() {
+    $('previas').innerHTML = pendientes.map((p, i) => '<div class="previa">' + (p.url ? '<img src="' + p.url + '">' : esc(p.nombre.slice(0, 22))) +
+      '<button data-quitar="' + i + '" title="Quitar">✕</button></div>').join('');
+    $('previas').querySelectorAll('[data-quitar]').forEach(b => b.onclick = () => { pendientes.splice(+b.dataset.quitar, 1); pintarPrevias(); });
+  }
+
+  const subir = p => new Promise((ok, mal) => google.script.run.withSuccessHandler(ok).withFailureHandler(mal).subirArchivo(chatActual, p.nombre, p.mime, p.b64));
+
+  async function enviar() {
+    if (dictando) pararDictado();
+    const texto = $('texto').value.trim();
+    if (!texto && !pendientes.length) return;
+    avisoMicro('');
+    $('bEnviar').disabled = true;
+    try {
+      const adj = [];
+      for (const p of pendientes) adj.push(await subir(p));
+      pendientes = []; pintarPrevias();
+      $('texto').value = ''; ajustar();
+      ocupado = true;
+      pegadoAbajo = true;
+      google.script.run.withSuccessHandler(s => { firma = ''; pintar(s); irAbajo(); $('bEnviar').disabled = false; })
+        .withFailureHandler(e => { fallo(e); $('bEnviar').disabled = false; }).enviarMensaje(chatActual, texto, adj);
+    } catch (e) { alert('No se pudo subir un archivo: ' + (e.message || e)); $('bEnviar').disabled = false; }
+  }
+  $('bEnviar').onclick = enviar;
+  const ajustar = () => { const t = $('texto'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 180) + 'px'; };
+  $('texto').addEventListener('input', ajustar);
+  $('texto').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 820) { e.preventDefault(); enviar(); } });
+
+  $('intGemini').onclick = () => {
+    const on = !$('intGemini').classList.contains('on');
+    $('intGemini').classList.toggle('on', on);
+    ocupado = true;
+    google.script.run.withSuccessHandler(s => { firma = ''; pintar(s); }).withFailureHandler(fallo).cambiarGemini(on, chatActual);
+  };
+
+  // Gemini va por separado para que la app no se congele si su API tarda
+  let empujando = false;
+  function empujar() {
+    if (!chatActual || empujando || document.hidden) return;
+    empujando = true;
+    google.script.run.withSuccessHandler(() => { empujando = false; }).withFailureHandler(() => { empujando = false; }).empujarGemini(chatActual);
+  }
+
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) pedir(); });
+  pedir();
+  setInterval(pedir, 4000);
+  setInterval(empujar, 15000);
+</script>
+</body>
+</html>

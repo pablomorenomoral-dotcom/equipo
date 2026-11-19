@@ -1,0 +1,16 @@
+{
+  "name": "Equipo · Claude + Gemini",
+  "short_name": "Equipo",
+  "description": "Chat de trabajo de Pablo con Claude y Gemini",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1014",
+  "theme_color": "#10171c",
+  "icons": [
+    { "src": "icono-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icono-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icono-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
